@@ -1,3 +1,28 @@
+# Virtual environment
+.venv/
+venv/
+
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Database
+config.db
+
+# IDE / Editor
+.vscode/
+.idea/
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Distribution / build
+dist/
+build/
+*.egg-info/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
