@@ -16,13 +16,15 @@
 
 ## Objetivo del Juego
 
-Sobrevive el mayor tiempo posible eliminando oleadas de enemigos. Cada oleada aumenta en dificultad:
-- **Oleada 1**: 3 enemigos
-- **Oleada 2**: 4 enemigos
-- **Oleada 3**: 5 enemigos
-- Y asi sucesivamente...
+Sobrevive el mayor tiempo posible eliminando oleadas de enemigos y acumulando la mayor puntuacion. Cada oleada aumenta en dificultad:
+- **Oleada 1**: 3 enemigos normales
+- **Oleada 2**: 4 enemigos normales
+- **Oleada 3**: 5 enemigos normales + 1 ShurikenEnemy
+- **Oleada 4**: 6 enemigos normales + 2 ShurikenEnemy
+- **Oleada 5**: 7 enemigos normales + 3 ShurikenEnemy (cambia musica a lvl2.mp3)
+- Y asi sucesivamente (maximo: 10 normales + 5 ShurikenEnemy)
 
-El juego termina cuando recibes un golpe de cualquier enemigo. Presiona **R** para reintentar.
+El juego termina cuando recibes un golpe de cualquier enemigo o shuriken. Presiona **R** para reintentar o **ESC** para volver al menu.
 
 ---
 
@@ -32,8 +34,8 @@ El juego termina cuando recibes un golpe de cualquier enemigo. Presiona **R** pa
 | **Movimiento** | `W` / `A` / `S` / `D` |
 | **Atacar (Katana)** | Click izquierdo del mouse (mantener) |
 | **Lanzar Shuriken** | Click derecho del mouse |
-| **Menu/Pausa** | `ESC` |
 | **Reiniciar** | `R` (en pantalla game over) |
+| **Volver al menu** | `ESC` |
 
 ### Detalles de Combate
 
@@ -52,6 +54,28 @@ El juego termina cuando recibes un golpe de cualquier enemigo. Presiona **R** pa
 ---
 
 ## Enemigos
+
+### Tipos de Enemigos
+
+**1. Enemigo Normal (Rojo)**
+- Aparece desde la oleada 1
+- Patrulla y persigue al jugador
+- Mata por contacto directo
+- Puntos: 10 (20 si es sigilo)
+
+**2. ShurikenEnemy (Negro)**
+- Aparece desde la oleada 3
+- Se detiene cuando detecta al jugador
+- Dispara shurikens cada 0.5 segundos
+- Sprite: Frame 1 de ShurikenEnemy_attack_R.png (sin animacion)
+- Puntos: 25 (50 si es sigilo)
+- Limite maximo: 5 por oleada
+
+**Sistema de Puntuacion:**
+- Enemigo normal: 10 puntos
+- ShurikenEnemy: 25 puntos
+- **Bonificacion de sigilo (2x)**: Si matas al enemigo por la espalda (no te ve)
+- Leaderboard: Top 5 puntuaciones guardadas con nombre
 
 ### Comportamiento de IA
 
@@ -91,11 +115,13 @@ Los enemigos implementan un sistema de IA:
 
 ### Caracteristicas Tecnicas
 
-- **Dimensiones**: 25 pixeles de radio
+- **Dimensiones**: 50 pixeles de radio (hitbox)
 - **Velocidad de patrulla**: 1.8-2.4 pixeles/frame
 - **Velocidad de persecucion**: ~5.5 pixeles/frame
 - **Distancia de llegada**: 12 pixeles (consideran que llegaron al objetivo)
 - **Retardo individual de alerta**: 0.0-1.5 segundos (aleatorio)
+- **Distancia minima de spawn**: 250 pixeles del jugador
+- **Limite de enemigos**: 10 normales + 5 ShurikenEnemy
 
 ---
 
@@ -175,15 +201,17 @@ Accede desde el menu principal presionando **Configuracion**.
 
 ## Audio
 
-- **Musica de fondo**: `musica/lvl1.mp3`
+- **Musica nivel 1**: `musica/lvl1.mp3` (oleadas 1-4)
+- **Musica nivel 2**: `musica/lvl2.mp3` (oleada 5 en adelante)
 - **Ciclo**: Loop infinito durante el juego
-- **Control**: Menu de configuracion
-- **Volumen por defecto**: 20%
+- **Control**: Menu de configuracion (+/- 5% por clic)
+- **Volumen por defecto**: 100%
 
 **Comportamiento:**
 - Inicia al presionar "Jugar"
-- Se detiene al volver al menu principal
-- Persiste el volumen configurado
+- Cambia automaticamente a lvl2.mp3 en oleada 5
+- Se detiene al morir o volver al menu (ESC)
+- Persiste el volumen configurado en config.db
 
 ---
 
@@ -191,17 +219,25 @@ Accede desde el menu principal presionando **Configuracion**.
 
 ```
 game2025-sarabia/
-├── Main.py                    # Archivo principal
+├── main.py                    # Archivo principal
 ├── README.md                  # Este archivo
+├── requirements.txt           # Dependencias Python
 ├── config.db                  # Base de datos (generada al ejecutar)
 ├── imagenes/
 │   ├── Ninja_attack_R.png     # Spritesheet ninja (9 frames)
-│   ├── lvl1.png               # Fondo del mapa (800x600)
+│   ├── Enemy_attack_R.png     # Spritesheet enemigo rojo (9 frames)
+│   ├── ShurikenEnemy_attack_R.png  # Spritesheet enemigo negro (usa frame 2)
+│   ├── Shuriken.png           # Sprite proyectil (16x16)
 │   ├── icon.png               # Icono de ventana
 │   └── Frames/                # Frames individuales (backup)
 └── musica/
-    └── lvl1.mp3               # Musica de fondo
+    ├── lvl1.mp3               # Musica oleadas 1-4
+    └── lvl2.mp3               # Musica oleada 5+
 ```
+
+**Base de datos (config.db):**
+- Tabla `config`: Almacena volumen (id=1, volumen REAL)
+- Tabla `scores`: Leaderboard (id, name TEXT, score INTEGER, ts TIMESTAMP)
 
 ---
 
@@ -262,7 +298,7 @@ python -m pip freeze > requirements.txt
 5) Ejecutar el juego:
 
 ```powershell
-python Main.py
+python main.py
 ```
 
 6) Salir / desactivar el entorno:
@@ -283,7 +319,7 @@ Si prefieres no usar un entorno virtual, puedes instalar la dependencia globalme
 
 ```bash
 pip install pygame
-python Main.py
+python main.py
 ```
 
 Recomendamos seguir la sección "Instalacion (entorno virtual recomendado)" arriba para un entorno reproducible.
@@ -293,23 +329,31 @@ Recomendamos seguir la sección "Instalacion (entorno virtual recomendado)" arri
 ## Como Jugar
 
 ### Secuencia de Inicio
-1. Ejecuta `python Main.py`
+1. Ejecuta `python main.py`
 2. Se abrira la ventana del juego (800x600)
 3. Veras el menu principal
 
 ### En el Menu Principal
-- **Jugar**: Comienza una nueva partida
-- **Configuracion**: Ajusta el volumen
+- **Jugar**: Solicita tu nombre (max 16 caracteres) y comienza partida
+- **Configuracion**: Ajusta el volumen (0-100% en incrementos de 5%)
 - **Salir**: Cierra el juego
 
 ### Durante el Juego
-1. Muevete con `WASD`
-2. Ataca enemigos cercanos con click izquierdo (katana)
-3. Lanza shurikens con click derecho (a larga distancia)
-4. Esquiva enemigos (contacto = muerte)
-5. Sobrevive oleadas cada vez mas dificiles
-6. Presiona `ESC` para volver al menu
-7. Cuando mueras, presiona `R` para reintentar
+1. Ingresa tu nombre (se preserva al reiniciar con R)
+2. Muevete con `WASD`
+3. Ataca enemigos cercanos con click izquierdo (katana)
+4. Lanza shurikens con click derecho (a larga distancia)
+5. Esquiva enemigos y proyectiles (contacto = muerte)
+6. Acumula puntos: 10 normales, 25 ShurikenEnemy, 2x por sigilo
+7. Sobrevive oleadas cada vez mas dificiles
+8. Cuando mueras, presiona `R` para reintentar
+9. Presiona `ESC` para volver al menu
+
+### Pantalla de Game Over
+- Muestra tu puntuacion final
+- Muestra top 5 leaderboard con nombres y puntuaciones
+- `R`: Reiniciar partida
+- `ESC`: Volver al menu principal
 
 ### Estrategia
 - Los enemigos persiguen cuando te ven
@@ -393,11 +437,13 @@ ESTADO: Patrullaje (ciclo)
 - Deteccion de estancamiento de enemigos (evita bucles infinitos)
 - Colisiones separadas en X/Y (mas eficiente)
 - Delta time preciso (60 FPS)
+- Limite de enemigos: Maximo 10 normales + 5 ShurikenEnemy por oleada
 
 ### Memoria
 - Enemigos reutilizados en oleadas
 - Sprites cacheados en memoria
 - Base de datos SQLite (minima huella)
+- Leaderboard limitado a top 5
 
 ---
 
